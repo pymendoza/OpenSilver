@@ -564,10 +564,14 @@ namespace Windows.UI.Xaml.Controls.Primitives
                 // We make it transparent to clicks only if either the popup has a false "IsHitTestVisible", or the content of the popup has a false "IsHitTestVisible":
                 bool transparentToClicks = (!this.IsHitTestVisible) || (child is FrameworkElement && !((FrameworkElement)child).IsHitTestVisible);
 
+                // Consider the horizontal and vertical margins specified in the popup content when creating the surrounding border in the next step
+                var childBorderVerticalMarginOffset = GetChildBorderVerticalMarginOffset();
+                var childBorderHorizontalMarginOffset = GetChildBorderHorizontalMarginOffset();
+
                 // Create a surrounding border to enable positioning and alignment:
                 _outerBorder = new ContentPresenter()
                 {
-                    Margin = new Thickness(_referencePosition.X + this.HorizontalOffset, _referencePosition.Y + this.VerticalOffset, 0d, 0d),
+                    Margin = new Thickness(_referencePosition.X + this.HorizontalOffset + childBorderHorizontalMarginOffset, _referencePosition.Y + this.VerticalOffset + childBorderVerticalMarginOffset, 0d, 0d),
                     Content = child,
                     HorizontalAlignment = this.HorizontalContentAlignment,
                     VerticalAlignment = this.VerticalContentAlignment,
@@ -590,6 +594,40 @@ namespace Windows.UI.Xaml.Controls.Primitives
             {
                 // The popup is already visible.
             }
+        }
+
+        private double GetChildBorderVerticalMarginOffset()
+        {
+            //TODO: Will check if this is constrained to Border type only
+            if (this.Child is Border border)
+            {
+                double verticalMarginOffset;
+
+                switch (border.VerticalAlignment)
+                {
+                    case VerticalAlignment.Top:
+                        verticalMarginOffset = border.Margin.Top;
+                        break;
+                    case VerticalAlignment.Bottom:
+                        verticalMarginOffset = border.Margin.Bottom;
+                        break;
+                    case VerticalAlignment.Center: //TODO:
+                    case VerticalAlignment.Stretch: //TODO:
+                    default:
+                        verticalMarginOffset = 0d;
+                        break;
+                }
+
+                return verticalMarginOffset;
+            }
+
+            return 0;
+        }
+
+        //TODO:
+        private double GetChildBorderHorizontalMarginOffset()
+        {
+            return 0;
         }
 
         private void HidePopupRootIfVisible()
@@ -664,7 +702,6 @@ namespace Windows.UI.Xaml.Controls.Primitives
             set { _stayOpen = value; }
         }
 
-
         internal void UpdatePopupParent()
         {
             UIElement element = PlacementTarget ?? (UIElement)this.INTERNAL_VisualParent;
@@ -703,11 +740,13 @@ namespace Windows.UI.Xaml.Controls.Primitives
                 Canvas.SetZIndex(_popupRoot, ++_currentZIndex);
             }
         }
+
         [OpenSilver.NotImplemented]
         public void SetWindow(Window associatedWindow)
         {
 
         }
+
         protected override Size MeasureOverride(Size availableSize)
         {
             return new Size();
