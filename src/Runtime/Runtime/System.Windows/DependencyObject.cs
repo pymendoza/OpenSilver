@@ -599,5 +599,45 @@ namespace Windows.UI.Xaml
         {
             return default(object);
         }
+
+#if MIGRATION
+
+        //
+        // Summary:
+        //     Sets the local value of a read-only dependency property, specified by the System.Windows.DependencyPropertyKey
+        //     identifier of the dependency property.
+        //
+        // Parameters:
+        //   key:
+        //     The System.Windows.DependencyPropertyKey identifier of the property to set.
+        //
+        //   value:
+        //     The new local value.
+        public void SetValue(DependencyPropertyKey key, object value)
+        {
+            //VerifyAccess();
+            DependencyProperty dp;
+            PropertyMetadata metadata = SetupPropertyChange(key, out dp);
+            //SetValueCommon(dp, value, metadata, coerceWithDeferredReference: false, coerceWithCurrentValue: false, OperationType.Unknown, isInternal: false);
+        }
+
+        private PropertyMetadata SetupPropertyChange(DependencyPropertyKey key, out DependencyProperty dp)
+        {
+            if (key != null)
+            {
+                dp = key.DependencyProperty;
+                //dp.VerifyReadOnlyKey(key);
+                return dp.GetMetadata(typeof(DependencyObjectType));
+            }
+
+            throw new ArgumentNullException("key");
+        }
+
+        //private void SetValueCommon(DependencyProperty dp, object value, PropertyMetadata metadata, bool coerceWithDeferredReference, bool coerceWithCurrentValue, OperationType operationType, bool isInternal)
+        //{
+        //    //TODO:
+        //}
+
+#endif
     }
 }
