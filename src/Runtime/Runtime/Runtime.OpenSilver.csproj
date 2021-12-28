@@ -50,6 +50,7 @@
 		<Compile Include="Microsoft.Expression.Interactivity\WORKINPROGRESS\ComparisonLogic.cs" />
 		<Compile Include="Microsoft.Expression.Interactivity\WORKINPROGRESS\TypeConverterHelper.cs" />
 		<Compile Include="Microsoft.Expression.Interactivity\WORKINPROGRESS\VisualStateUtilities.cs" />
+		<Compile Include="Microsoft.Expression.Interactivity.Core\WORKINPROGRESS\GoToStateAction.cs" />
 		<Compile Include="OpenSilver\Internal\ResizeObserver.cs" />
 		<Compile Include="Microsoft.Expression.Interactivity.Core\WORKINPROGRESS\ChangePropertyAction.cs" />
 		<Compile Include="Microsoft.Expression.Interactivity.Core\WORKINPROGRESS\ComparisonConditionType.cs" />
@@ -110,6 +111,10 @@
 		<Compile Include="System.Windows.Data\DependencyPropertyNode.cs" />
 		<Compile Include="System.Windows.Documents\WORKINPROGRESS\FontSource.cs" />
 		<Compile Include="System.Windows.Interactivity\WORKINPROGRESS\EventTrigger.cs" />
+		<Compile Include="System.Windows.Interactivity\WORKINPROGRESS\EventTriggerBase.cs" />
+		<Compile Include="System.Windows.Interactivity\WORKINPROGRESS\NameResolvedEventArgs.cs" />
+		<Compile Include="System.Windows.Interactivity\WORKINPROGRESS\NameResolver.cs" />
+		<Compile Include="System.Windows.Interactivity\WORKINPROGRESS\TypeConstraintAttribute.cs" />
 		<Compile Include="System.Windows.Interop\NavigationStateChangedEventArgs.cs" />
 		<Compile Include="System.Windows.Controls\WORKINPROGRESS\ItemsControlDragDropTarget.cs" />
 		<Compile Include="System.Windows.Controls\WORKINPROGRESS\ListBoxDragDropTarget.cs" />
@@ -211,6 +216,8 @@
 		<Compile Include="System.Windows\Expression.cs" />
 		<Compile Include="System.Windows\TemplateBindingExtension.cs" />
 		<Compile Include="System.Windows\WORKINPROGRESS\CheckAndDownloadUpdateCompletedEventArgs.cs" />
+		<Compile Include="System.Windows\WORKINPROGRESS\DependencyObjectType.cs" />
+		<Compile Include="System.Windows\WORKINPROGRESS\DependencyPropertyKey.cs" />
 		<Compile Include="System.Windows\WORKINPROGRESS\FontCapitals.cs" />
 		<Compile Include="System.Windows\WORKINPROGRESS\FontStretches.cs" />
 		<Compile Include="System.Windows\WORKINPROGRESS\NotificationWindow.cs" />

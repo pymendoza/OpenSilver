@@ -18,9 +18,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 #if !MIGRATION
 using Windows.UI.Xaml;
 #endif
+
+#if MIGRATION
 
 namespace System.Windows.Interactivity
 {
@@ -36,6 +39,8 @@ namespace System.Windows.Interactivity
     {
         //Note on this file: see commit 58c52131 of October 30th, 2019 for comments on the modifications from the original source.
         //Based on the code that can be found at https://github.com/jlaanstra/Windows.UI.Interactivity/tree/master/Windows.UI.Interactivity.
+
+        private Type associatedObjectTypeConstraint;
 
         #region added because we changed heritage
         internal DependencyObject _associatedObject = null;
@@ -100,10 +105,15 @@ namespace System.Windows.Interactivity
             }
         }
 
-        internal TriggerAction()//Type associatedObjectTypeConstraint)
+        //internal TriggerAction()//Type associatedObjectTypeConstraint)
+        //{
+        //    //todo: should probably handle that property
+        //    //this.AssociatedObjectTypeConstraint = associatedObjectTypeConstraint;
+        //}
+
+        internal TriggerAction(Type associatedObjectTypeConstraint)
         {
-            //todo: should probably handle that property
-            //this.AssociatedObjectTypeConstraint = associatedObjectTypeConstraint;
+            this.associatedObjectTypeConstraint = associatedObjectTypeConstraint;
         }
 
         /// <summary>
@@ -156,3 +166,5 @@ namespace System.Windows.Interactivity
         }
     }
 }
+
+#endif
