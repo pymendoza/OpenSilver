@@ -1517,7 +1517,7 @@ namespace Windows.UI.Xaml
             {
                 if (_lostFocusEventManager == null)
                 {
-                    _lostFocusEventManager = new INTERNAL_EventManager<RoutedEventHandler, RoutedEventArgs>(() => (this.INTERNAL_OptionalSpecifyDomElementConcernedByFocus ?? this.INTERNAL_OuterDomElement), "focusout", ProcessOnLostFocus);
+                    _lostFocusEventManager = new INTERNAL_EventManager<RoutedEventHandler, RoutedEventArgs>(() => (this.INTERNAL_OptionalSpecifyDomElementConcernedByFocus ?? this.INTERNAL_OuterDomElement), "blur", ProcessOnLostFocus);
                 }
                 return _lostFocusEventManager;
             }
