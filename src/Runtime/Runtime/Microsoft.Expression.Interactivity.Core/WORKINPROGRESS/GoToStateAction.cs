@@ -1,5 +1,7 @@
 ﻿#if MIGRATION
 
+using System;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Interactivity;
 
@@ -31,17 +33,27 @@ namespace Microsoft.Expression.Interactivity.Core
         //     The name of the VisualState.
         public string StateName { get; set; }
 
-        //
-        // Summary:
-        //     This method is called when some criteria is met and the action is invoked.
-        //
-        // Parameters:
-        //   parameter:
-        //
-        // Exceptions:
-        //   T:System.InvalidOperationException:
-        //     Could not change the target to the specified StateName.
-        protected override void Invoke(object parameter) { }
+        /// <summary>
+        /// This method is called when some criteria is met and the action is invoked.
+        /// </summary>
+        /// <param name="parameter"></param>
+        /// <exception cref="InvalidOperationException">Could not change the target to the specified StateName.</exception>
+        protected override void Invoke(object parameter)
+        {
+            if (this.AssociatedObject != null)
+            {
+                this.InvokeImpl(this.StateTarget);
+            }
+        }
+
+        internal void InvokeImpl(FrameworkElement stateTarget)
+        {
+            if (stateTarget != null)
+            {
+                VisualStateUtilities.GoToState(stateTarget, this.StateName, this.UseTransitions);
+            }
+        }
+
         //
         // Summary:
         //     Called when the target changes. If the TargetName property isn't set, this action
@@ -55,7 +67,45 @@ namespace Microsoft.Expression.Interactivity.Core
         // Exceptions:
         //   T:System.InvalidOperationException:
         //     Could not locate an appropriate FrameworkElement with states.
-        protected override void OnTargetChanged(FrameworkElement oldTarget, FrameworkElement newTarget) { base.OnTargetChanged(oldTarget, newTarget); }
+        protected override void OnTargetChanged(FrameworkElement oldTarget, FrameworkElement newTarget) 
+        { 
+            base.OnTargetChanged(oldTarget, newTarget);
+
+            FrameworkElement frameworkElement = null;
+
+            if (string.IsNullOrEmpty(this.TargetName) && !this.IsTargetObjectSet)
+            {
+                bool successful = VisualStateUtilities.TryFindNearestStatefulControl(this.AssociatedObject as FrameworkElement, out frameworkElement);
+                if (!successful && frameworkElement != null)
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture,
+                                            "Target '{0}' does not define any VisualStateGroups.",
+                                            frameworkElement.Name));
+                }
+            }
+            else
+            {
+                frameworkElement = this.Target;
+            }
+
+            this.StateTarget = frameworkElement;
+        }
+
+        private bool IsTargetObjectSet
+        {
+            get
+            {
+                bool isLocallySet = this.ReadLocalValue(TargetedTriggerAction.TargetObjectProperty) != DependencyProperty.UnsetValue;
+                // if the value can be set indirectly (via trigger, style, etc), should also check ValueSource, but not a concern for behaviors right now.
+                return isLocallySet;
+            }
+        }
+
+        private FrameworkElement StateTarget
+        {
+            get;
+            set;
+        }
     }
 }
 

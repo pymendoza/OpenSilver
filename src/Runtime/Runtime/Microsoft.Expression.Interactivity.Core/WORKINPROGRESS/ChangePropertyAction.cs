@@ -104,14 +104,11 @@ namespace Microsoft.Expression.Interactivity.Core
         /// <exception cref="System.ArgumentException">Could not set <c cref="PropertyName"/> to the value specified by <c cref="Value"/>.</exception>
         protected override void Invoke(object parameter)
         {
-            if (this.AssociatedObject == null)
-            {
-                return;
-            }
             if (string.IsNullOrEmpty(this.PropertyName))
             {
                 return;
             }
+
             if (this.Target == null)
             {
                 return;
@@ -185,6 +182,24 @@ namespace Microsoft.Expression.Interactivity.Core
                     this.PropertyName,
                     propertyInfo.PropertyType.Name),
                     innerException);
+            }
+        }
+
+        //TODO:
+        protected new object Target 
+        {
+            get 
+            {
+                if (this.TargetObject != null)
+                {
+                    return this.TargetObject;
+                }
+                else if (this.InheritedParent != null && this.InheritedParent is FrameworkElement)
+                {
+                    return this.InheritedParent;
+                }
+
+                return null;
             }
         }
 
@@ -263,6 +278,7 @@ namespace Microsoft.Expression.Interactivity.Core
             {
                 throw new InvalidOperationException("The Increment property cannot be set to True if the Duration property is set.");
             }
+
             if (!typeof(DependencyObject).IsAssignableFrom(targetType))
             {
                 throw new InvalidOperationException(string.Format(
