@@ -123,12 +123,6 @@ namespace Windows.UI.Xaml.Shapes
         private static void Fill_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             ((Shape)d).ScheduleRedraw();
-            ((Shape)d).OnFillChanged();
-        }
-
-        protected virtual void OnFillChanged()
-        {
-
         }
 
         /// <summary>
@@ -398,10 +392,13 @@ namespace Windows.UI.Xaml.Shapes
         private static void StrokeDashOffset_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             Shape shape = (Shape)d;
-            if (shape._canvasDomElement != null && INTERNAL_VisualTreeManager.IsElementInVisualTree(shape))
+            if (INTERNAL_VisualTreeManager.IsElementInVisualTree(shape))
             {
-                var context = INTERNAL_HtmlDomManager.Get2dCanvasContext(shape._canvasDomElement);
-                context.lineDashOffset = shape.StrokeDashOffset.ToInvariantString();
+                if (shape._canvasDomElement != null)
+                {
+                    var context = INTERNAL_HtmlDomManager.Get2dCanvasContext(shape._canvasDomElement);
+                    context.lineDashOffset = shape.StrokeDashOffset.ToInvariantString();
+                }
             }
         }
 
@@ -433,7 +430,7 @@ namespace Windows.UI.Xaml.Shapes
 
         internal protected virtual void ManageStrokeThicknessChanged()
         {
-            if (_canvasDomElement != null && INTERNAL_VisualTreeManager.IsElementInVisualTree(this))
+            if (INTERNAL_VisualTreeManager.IsElementInVisualTree(this))
             {
                 var context = INTERNAL_HtmlDomManager.Get2dCanvasContext(_canvasDomElement);
                 context.lineWidth = StrokeThickness.ToInvariantString();
@@ -470,7 +467,7 @@ namespace Windows.UI.Xaml.Shapes
         /// </summary>
         internal void ScheduleRedraw()
         {
-            if (_suspendRendering || _canvasDomElement == null)
+            if (_suspendRendering)
                 return;
 
             if (!_redrawPending) // This ensures that the "BeginInvoke" method is only called once, and it is not called again until its delegate has been executed.
@@ -1008,7 +1005,7 @@ context.translate({offset.ToInvariantString()}, 0);
 
         internal void ApplyMarginToFixNegativeCoordinates(Point newFixingMargin)
         {
-            if (_canvasDomElement != null && INTERNAL_VisualTreeManager.IsElementInVisualTree(this))
+            if (INTERNAL_VisualTreeManager.IsElementInVisualTree(this))
             {
                 var styleOfcanvasElement = INTERNAL_HtmlDomManager.GetDomElementStyleForModification(_canvasDomElement);
                 try

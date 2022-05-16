@@ -138,6 +138,7 @@ namespace Windows.UI.Xaml.Controls
             }
 
             _rectProgressIndicator.Width = (IsIndeterminate || maximum == minimum ? 1.0 : (Value - minimum) / (maximum - minimum)) * Math.Max(0.0, parent.ActualWidth - widthOffset);
+            _rectProgressIndicator.ScheduleRedraw();
         }
 
         protected override void OnMaximumChanged(double oldMaximum, double newMaximum)
