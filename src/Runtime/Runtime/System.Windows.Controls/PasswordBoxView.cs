@@ -17,6 +17,12 @@ using OpenSilver.Internal;
 using OpenSilver.Internal.Controls;
 
 #if MIGRATION
+using System.Windows.Input;
+#else
+using Windows.UI.Xaml.Input;
+#endif
+
+#if MIGRATION
 namespace System.Windows.Controls
 #else
 namespace Windows.UI.Xaml.Controls
@@ -87,11 +93,21 @@ namespace Windows.UI.Xaml.Controls
             OpenSilver.Interop.ExecuteJavaScriptVoid($"{sDiv}.addEventListener('input', {sInputCallback})");
 
             UpdateDOMPassword(Host.Password);
+
+            if (FocusManager.GetFocusedElement() == Host)
+            {
+                INTERNAL_HtmlDomManager.SetFocusNative(_passwordInputField);
+            }
         }
 
-        internal sealed override NativeEventsManager CreateEventsManager()
+        internal sealed override void AddEventListeners()
         {
-            return new NativeEventsManager(this, this, Host, true);
+            NativeEventsHelper.AddEventListeners(this, true);
+        }
+
+        internal sealed override void DispatchEvent(object jsEventArg)
+        {
+            NativeEventCallback(this, Host, jsEventArg);
         }
 
         internal override bool EnablePointerEventsCore => true;

@@ -234,14 +234,6 @@ document.setGridCollapsedDuetoHiddenColumn = function (id) {
     }
 }
 
-document.setDisplayTableCell = function (id) {
-    const element = document.getElementById(id);
-    if (!element || element.tagName == 'SPAN')
-        return;
-
-    element.style.display = 'table-cell';
-}
-
 document.getActualWidthAndHeight = function (element) {
     return (typeof element === 'undefined' || element === null) ? '0|0' : element['offsetWidth'].toFixed(3) + '|' + element['offsetHeight'].toFixed(3);
 }
@@ -270,15 +262,34 @@ document.createElementSafe = function (tagName, id, parentElement, index) {
     return newElement;
 }
 
-document.createTextBlockElement = function (id, parentElement, whiteSpace) {
+document.createTextBlockElement = function (id, parentElement, wrap) {
     const newElement = document.createElementSafe('div', id, parentElement, -1);
 
     if (newElement) {
-        newElement.style['whiteSpace'] = whiteSpace;
         newElement.style['overflow'] = 'hidden';
         newElement.style['textAlign'] = 'left';
         newElement.style['boxSizing'] = 'border-box';
+        if (wrap) {
+            newElement.style['overflowWrap'] = 'break-word';
+            newElement.style['whiteSpace'] = 'pre-wrap';
+        } else {
+            newElement.style['whiteSpace'] = 'pre';
+        }
     }
+}
+
+document.createPopupRootElement = function (id, rootElement, pointerEvents) {
+    if (!rootElement) return;
+
+    const popupRoot = document.createElement('div');
+    popupRoot.setAttribute('id', id);
+    popupRoot.style.position = 'absolute';
+    popupRoot.style.width = '100%';
+    popupRoot.style.height = '100%';
+    popupRoot.style.overflowX = 'hidden';
+    popupRoot.style.overflowY = 'hidden';
+    popupRoot.style.pointerEvents = pointerEvents;
+    rootElement.appendChild(popupRoot);
 }
 
 document.createCanvasElement = function (id, parentElement) {
@@ -439,17 +450,21 @@ document._attachEventListeners = function (element, handler, isFocusable) {
     const view = typeof element === 'string' ? document.getElementById(element) : element;
     if (!view || view._eventsStore) return;
 
+    function directEventHandler(e) {
+        handler(this.id, e);
+    }
+
     function bubblingEventHandler(e) {
         if (!e.isHandled) {
             e.isHandled = true;
-            handler(e);
+            handler(this.id, e);
         }
     }
 
     function bubblingHandledEventHandler(e) {
         if (!e.isHandled) {
             e.isHandled = true;
-            handler(e);
+            handler(this.id, e);
             e.preventDefault();
         }
     }
@@ -462,8 +477,8 @@ document._attachEventListeners = function (element, handler, isFocusable) {
     view.addEventListener('mouseup', store['mouseup'] = bubblingEventHandler);
     view.addEventListener('mousemove', store['mousemove'] = bubblingEventHandler);
     view.addEventListener('wheel', store['wheel'] = bubblingEventHandler, { passive: true });
-    view.addEventListener('mouseenter', store['mouseenter'] = handler);
-    view.addEventListener('mouseleave', store['mouseleave'] = handler);
+    view.addEventListener('mouseenter', store['mouseenter'] = directEventHandler);
+    view.addEventListener('mouseleave', store['mouseleave'] = directEventHandler);
     if (store.enableTouch) {
         view.addEventListener('touchstart', store['touchstart'] = bubblingEventHandler, { passive: true });
         view.addEventListener('touchend', store['touchend'] = bubblingHandledEventHandler);
@@ -479,36 +494,8 @@ document._attachEventListeners = function (element, handler, isFocusable) {
     }
 }
 
-document._removeEventListeners = function (element) {
-    const view = typeof element === 'string' ? document.getElementById(element) : element;
-    if (!view || !view._eventsStore) return;
-
-    const store = view._eventsStore;
-    view.removeEventListener('mousedown', store['mousedown']);
-    view.removeEventListener('mouseup', store['mouseup']);
-    view.removeEventListener('mousemove', store['mousemove']);
-    view.removeEventListener('wheel', store['wheel']);
-    view.removeEventListener('mouseenter', store['mouseenter']);
-    view.removeEventListener('mouseleave', store['mouseleave']);
-    if (store.enableTouch) {
-        view.removeEventListener('touchstart', store['touchstart']);
-        view.removeEventListener('touchend', store['touchend']);
-        view.removeEventListener('touchmove', store['touchmove']);
-    }
-    if (store.isFocusable) {
-        view.removeEventListener('keypress', store['keypress']);
-        view.removeEventListener('input', store['input']);
-        view.removeEventListener('keydown', store['keydown']);
-        view.removeEventListener('keyup', store['keyup']);
-        view.removeEventListener('focusin', store['focusin']);
-        view.removeEventListener('focusout', store['focusout']);
-    }
-
-    delete view._eventsStore;
-}
-
-document.eventCallback = function (callbackId, arguments, sync) {
-    const argsArray = arguments;
+document.eventCallback = function (callbackId, args, sync) {
+    const argsArray = args;
     const idWhereCallbackArgsAreStored = "callback_args_" + document.callbackCounterForSimulator++;
     document.jsObjRef[idWhereCallbackArgsAreStored] = argsArray;
     if (sync) {
@@ -655,7 +642,7 @@ document.setPosition = function (id, left, top, bSetAbsolutePosition, bSetZeroMa
     }
 }
 
-document.measureTextBlock = function (uid, textWrapping, padding, width, maxWidth, emptyVal) {
+document.measureTextBlock = function (uid, whiteSpace, overflowWrap, padding, width, maxWidth, emptyVal) {
     var element = document.measureTextBlockElement;
     var elToMeasure = document.getElementById(uid);
     if (element && elToMeasure) {
@@ -668,9 +655,9 @@ document.measureTextBlock = function (uid, textWrapping, padding, width, maxWidt
         element.style.fontFamily = computedStyle.fontFamily;
         element.style.fontStyle = computedStyle.fontStyle;
 
-        if (textWrapping.length > 0) {
-            element.style.whiteSpace = textWrapping;
-        }
+        if (whiteSpace.length > 0)
+            element.style.whiteSpace = whiteSpace;
+        element.style.overflowWrap = overflowWrap;
         if (padding.length > 0) {
             element.style.boxSizing = "border-box";
             element.style.padding = padding;

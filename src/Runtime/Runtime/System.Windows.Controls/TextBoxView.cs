@@ -18,9 +18,12 @@ using CSHTML5.Internal;
 using OpenSilver.Internal;
 using OpenSilver.Internal.Controls;
 
-#if !MIGRATION
+#if MIGRATION
+using System.Windows.Input;
+#else
 using Windows.Foundation;
 using Windows.UI.Text;
+using Windows.UI.Xaml.Input;
 #endif
 
 #if MIGRATION
@@ -84,6 +87,11 @@ namespace Windows.UI.Xaml.Controls
             // absorbs pointer events.
 
             UpdateDomText(Host.Text);
+
+            if (FocusManager.GetFocusedElement() == Host)
+            {
+                INTERNAL_HtmlDomManager.SetFocusNative(_contentEditableDiv);
+            }
         }
 
         protected override void OnAfterApplyHorizontalAlignmentAndWidth()
@@ -145,9 +153,14 @@ namespace Windows.UI.Xaml.Controls
             }
         }
 
-        internal sealed override NativeEventsManager CreateEventsManager()
+        internal sealed override void AddEventListeners()
         {
-            return new NativeEventsManager(this, this, Host, true);
+            NativeEventsHelper.AddEventListeners(this, true);
+        }
+
+        internal sealed override void DispatchEvent(object jsEventArg)
+        {
+            NativeEventCallback(this, Host, jsEventArg);
         }
 
         internal override object GetDomElementToSetContentString()
@@ -228,30 +241,6 @@ element.setAttribute(""data-acceptsreturn"", ""{acceptsReturn.ToString().ToLower
 
                     default:
                         break;
-                }
-            }
-        }
-
-        internal void OnHorizontalScrollBarVisibilityChanged(ScrollBarVisibility scrollVisibility)
-        {
-            if (INTERNAL_HtmlDomManager.IsNotUndefinedOrNull(_contentEditableDiv))
-            {
-                string value = ScrollBarVisibilityToHtmlString(scrollVisibility);
-                if (value != null)
-                {
-                    INTERNAL_HtmlDomManager.GetDomElementStyleForModification(_contentEditableDiv).overflowX = value;
-                }
-            }
-        }
-
-        internal void OnVerticalScrollBarVisibilityChanged(ScrollBarVisibility scrollVisibility)
-        {
-            if (INTERNAL_HtmlDomManager.IsNotUndefinedOrNull(_contentEditableDiv))
-            {
-                string value = ScrollBarVisibilityToHtmlString(scrollVisibility);
-                if (value != null)
-                {
-                    INTERNAL_HtmlDomManager.GetDomElementStyleForModification(_contentEditableDiv).overflowY = value;
                 }
             }
         }
@@ -415,13 +404,6 @@ sel.setBaseAndExtent(nodesAndOffsets['startParent'], nodesAndOffsets['startOffse
 
             // Apply Host.TextWrapping
             contentEditableDivStyle.whiteSpace = Host.TextWrapping == TextWrapping.NoWrap ? "nowrap" : "pre-wrap";
-
-            // Apply Host.HorizontalScrollBarVisibility
-            contentEditableDivStyle.overflowX = ScrollBarVisibilityToHtmlString(Host.HorizontalScrollBarVisibility) ?? "hidden";
-
-            // Apply Host.VerticalScrollBarVisibility
-            contentEditableDivStyle.overflowY = ScrollBarVisibilityToHtmlString(Host.VerticalScrollBarVisibility) ?? "hidden";
-            
             contentEditableDivStyle.outline = "solid transparent"; // Note: this is to avoind having the weird border when it has the focus. I could have used outlineWidth = "0px" but or some reason, this causes the caret to not work when there is no text.
             contentEditableDivStyle.background = "solid transparent";
             contentEditableDivStyle.cursor = "text";
@@ -621,8 +603,14 @@ element_OutsideEventHandler.addEventListener('paste', function(e) {{
 
         protected override Size MeasureOverride(Size availableSize)
         {
-            string uniqueIdentifier = ((INTERNAL_HtmlDomElementReference)this.INTERNAL_OuterDomElement).UniqueIdentifier;
-            Size TextSize = Application.Current.TextMeasurementService.MeasureTextBlock(uniqueIdentifier, Host.TextWrapping, Margin, availableSize.Width, "M");
+            string uniqueIdentifier = ((INTERNAL_HtmlDomElementReference)INTERNAL_OuterDomElement).UniqueIdentifier;
+            Size TextSize = Application.Current.TextMeasurementService.MeasureTextBlock(
+                uniqueIdentifier,
+                Host.TextWrapping == TextWrapping.NoWrap ? "pre" : "pre-wrap",
+                string.Empty,
+                Margin,
+                availableSize.Width,
+                "M");
             return TextSize;
         }
     }
