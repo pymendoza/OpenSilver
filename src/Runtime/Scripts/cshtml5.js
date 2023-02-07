@@ -209,20 +209,6 @@ document.getElementByIdSafe = function (id) {
     return element;
 }
 
-document.enableFocus = function (id) {
-    const element = document.getElementById(id);
-    if (!element) return;
-    element.onfocus = null;
-}
-
-document.disableFocus = function (id) {
-    const element = document.getElementById(id);
-    if (!element) return;
-    element.onfocus = function (e) {
-        e.target.blur();
-    };
-}
-
 document.setGridCollapsedDuetoHiddenColumn = function (id) {
     const element = document.getElementById(id);
     if (!element)
@@ -289,6 +275,20 @@ document.createPopupRootElement = function (id, rootElement, pointerEvents) {
     popupRoot.style.overflowX = 'hidden';
     popupRoot.style.overflowY = 'hidden';
     popupRoot.style.pointerEvents = pointerEvents;
+    popupRoot.addEventListener('keydown', function (e) {
+        if (e.key === 'Tab') {
+            const focusableElements = document.querySelectorAll(`#${id} [tabindex]:not([tabindex="-1"], [tabindex=""])`);
+            if (focusableElements.length === 0) return;
+            if (!e.shiftKey && e.target === focusableElements[focusableElements.length - 1]) {
+                e.preventDefault();
+                focusableElements[0].focus();
+            } else if (e.shiftKey && e.target === focusableElements[0]) {
+                e.preventDefault();
+                focusableElements[focusableElements.length - 1].focus();
+            }
+        }
+    });
+
     rootElement.appendChild(popupRoot);
 }
 
@@ -489,8 +489,8 @@ document._attachEventListeners = function (element, handler, isFocusable) {
         view.addEventListener('input', store['input'] = bubblingEventHandler);
         view.addEventListener('keydown', store['keydown'] = bubblingEventHandler);
         view.addEventListener('keyup', store['keyup'] = bubblingEventHandler);
-        view.addEventListener('focusin', store['focusin'] = bubblingEventHandler);
-        view.addEventListener('focusout', store['focusout'] = bubblingEventHandler);
+        view.addEventListener('focus', store['focus'] = directEventHandler);
+        view.addEventListener('blur', store['blur'] = directEventHandler);
     }
 }
 
@@ -642,7 +642,7 @@ document.setPosition = function (id, left, top, bSetAbsolutePosition, bSetZeroMa
     }
 }
 
-document.measureTextBlock = function (uid, whiteSpace, overflowWrap, padding, width, maxWidth, emptyVal) {
+document.measureTextBlock = function (uid, whiteSpace, overflowWrap, padding, maxWidth, emptyVal) {
     var element = document.measureTextBlockElement;
     var elToMeasure = document.getElementById(uid);
     if (element && elToMeasure) {
@@ -663,7 +663,6 @@ document.measureTextBlock = function (uid, whiteSpace, overflowWrap, padding, wi
             element.style.padding = padding;
         }
 
-        element.style.width = width;
         element.style.maxWidth = maxWidth;
 
         const size = element.offsetWidth + "|" + element.offsetHeight;
