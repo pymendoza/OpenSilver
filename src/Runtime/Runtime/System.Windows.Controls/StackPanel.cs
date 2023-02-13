@@ -50,6 +50,10 @@ namespace Windows.UI.Xaml.Controls
     /// </example>
     public partial class StackPanel : Panel
     {
+        internal sealed override Orientation LogicalOrientation => Orientation;
+
+        internal sealed override bool HasLogicalOrientation => true;
+
         /// <summary>
         /// Gets or sets the dimension by which child elements are stacked.
         /// </summary>
@@ -158,6 +162,7 @@ namespace Windows.UI.Xaml.Controls
 
         private void SetDisplayOnChildWrappers(string display)
         {
+            if (!HasChildren) return;
             foreach (UIElement child in Children)
             {
                 if (child.INTERNAL_InnerDivOfTheChildWrapperOfTheParentIfAny is not null)
