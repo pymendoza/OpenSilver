@@ -132,12 +132,6 @@ namespace Windows.UI.Xaml
             //Note: The "rootDomElement" will contain one DIV for the root of the window visual tree, and other DIVs to host the popups.
             INTERNAL_RootDomElement = rootDomElement ?? throw new ArgumentNullException(nameof(rootDomElement));
 
-            // Reset the content of the root DIV:
-            if (IsMainWindow)
-            {
-                OpenSilver.Interop.ExecuteJavaScriptFastAsync("document.clearXamlRoot()"); //this should only be done by the MainWindow, otherwise, everytime we attach a new Window, it will clear everything.
-            }
-
             // In case of XAML view hosted inside an HTML app, we usually set the "position" of the window root to "relative" rather than "absolute" (via external JavaScript code) in order to display it inside a specific DIV. However, in this case, the layers that contain the Popups are placed under the window DIV instead of over it. To work around this issue, we set the root element display to "grid". See the sample app "IntegratingACshtml5AppInAnSPA".
             string sRootElement = INTERNAL_InteropImplementation.GetVariableStringForJS(rootDomElement);
             OpenSilver.Interop.ExecuteJavaScriptFastAsync($"{sRootElement}.style.display = 'grid'");
@@ -407,6 +401,14 @@ namespace Windows.UI.Xaml
         [OpenSilver.NotImplemented]
         public static Window GetWindow(DependencyObject dependencyObject)
         {
+            //TODO: this should in theory throw an InvaliOperationException if the dependencyObject is not valid but I didn't check what made it not valid (it looks like Windows themselves are not valid).
+            //      In Silverlight, doing: Window.GetWindow(new Border()); returns the main window if it was made from the main window, null if from another window.
+
+            UIElement dependencyObjectAsUIElement = dependencyObject as UIElement;
+            if (dependencyObjectAsUIElement != null)
+            {
+                return dependencyObjectAsUIElement.INTERNAL_ParentWindow;
+            }
             return null;
         }
 
